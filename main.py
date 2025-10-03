@@ -8,9 +8,11 @@ import os
 from datetime import datetime
 from telegram import Bot
 from dotenv import load_dotenv
+from healthcheck import HealthCheckServer
 
 # Load environment variables
 load_dotenv()
+healthcheck_status = {"eth_rpc_initialized": False, "telegram_bot_initialized": False, "eth_rpc_status": False}
 
 # Load configuration
 def load_config():
@@ -65,26 +67,63 @@ previous_balances = {}  # Dictionary to track previous balances for each address
 
 # Initialize services
 bot = Bot(token=bot_token)  # Initialize the Telegram bot
-ethbalance = pyetherbalance.PyEtherBalance(infura_url)  # Create an pyetherbalance object
+try:
+    ethbalance = pyetherbalance.PyEtherBalance(infura_url)  # Create an pyetherbalance object
+    healthcheck_status["eth_rpc_initialized"] = True
+except Exception as e:
+    logger.error(f"Failed to initialize PyEtherBalance: {str(e)}")
+    healthcheck_status["eth_rpc_initialized"] = False
+    raise
+
+# Initialize health check server
+health_check_server = HealthCheckServer(healthcheck_status, port=8000)
 
 
 def check_token_balance(coin, address):
     # if coin is None:
     #     return ethbalance.get_eth_balance(address)
     # else:
-    result = ethbalance.get_token_balance(coin.upper(), address)
-    # Extract just the balance value from the result
-    if isinstance(result, dict) and 'balance' in result:
-        return result['balance']
-    return result
+    try:
+        result = ethbalance.get_token_balance(coin.upper(), address)
+        
+        # Check if result contains an error status
+        if isinstance(result, dict) and result.get('status') == 'error':
+            logger.error(f"Error getting token balance for {coin.upper()}: {result.get('description', 'Unknown error')}")
+            healthcheck_status["eth_rpc_status"] = False
+            return result
+        
+        # Extract just the balance value from the result
+        if isinstance(result, dict) and 'balance' in result:
+            healthcheck_status["eth_rpc_status"] = True
+            return result['balance']
+        
+        healthcheck_status["eth_rpc_status"] = True
+        return result
+    except Exception as e:
+        logger.error(f"Failed to get token balance for {coin.upper()}: {str(e)}")
+        healthcheck_status["eth_rpc_status"] = False
+        raise
 
 
 def send_notification(message):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={message}"
-    response = requests.get(url).json()
-    logger.info(f"Message sent: {message}")
-    logger.debug(f"Telegram API response: {response}")
-    print(response)
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={message}"
+        response = requests.get(url).json()
+        
+        if response.get('ok') != True:
+            logger.error(f"Failed to send Telegram message: {response.get('description')}")
+            healthcheck_status["telegram_bot_initialized"] = False
+            return False
+            
+        logger.info(f"Message sent: {message}")
+        logger.debug(f"Telegram API response: {response}")
+        healthcheck_status["telegram_bot_initialized"] = True
+        return True
+        
+    except Exception as e:
+        logger.error(f"Exception while sending Telegram message: {str(e)}")
+        healthcheck_status["telegram_bot_initialized"] = False
+        return False
 
 
 def main_check():
@@ -136,8 +175,14 @@ def main():
     logger.info(f"Monitoring addresses: {ethereum_addresses}")
     logger.info(f"Monitoring coins: {coins_list}")
     logger.info(f"Check interval: {checking_interval} seconds")
+    
+    # Start healthcheck server in a separate thread
+    health_check_server.start_in_thread()
+    
+    # Run initial balance check
     main_check()
     
+    # Schedule regular balance checks
     schedule.every(checking_interval).seconds.do(main_check)
     logger.info("Scheduler configured - starting main loop")
     
