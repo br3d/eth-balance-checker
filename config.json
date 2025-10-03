@@ -1,0 +1,8 @@
+{
+  "ethereum_addresses": [
+    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+  ],
+  "coins_list": ["usdt", "usdc", "dai"],
+  "checking_interval": 600,
+  "log_level": "INFO"
+}
