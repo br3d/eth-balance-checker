@@ -2,6 +2,7 @@ import logging
 import threading
 from datetime import datetime
 from flask import Flask, jsonify
+from prometheus_metrics import metrics
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,11 @@ class HealthCheckServer:
             status_code = 200 if all_healthy else 500
             
             return jsonify(response_data), status_code
+        
+        @self.app.route('/metrics')
+        def prometheus_metrics():
+            """Prometheus metrics endpoint."""
+            return metrics.get_metrics_response()
 
     def start_server(self):
         """Start the health check server in a separate thread."""
