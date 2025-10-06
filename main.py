@@ -191,7 +191,7 @@ def main_check():
             # Send single "Bot is up!" message with all balances
             logger.info("Bot is starting up - sending initial notification")
             all_balances_text = "\n".join(initial_balances)
-            send_notification(f"🤖 Bot is up!\nBalances:\n{all_balances_text}")
+            send_notification(f"🤖 Bot is up!\nWallet: {ethereum_addresses[0]} \nBalances:\n{all_balances_text}")
             
         else:
             # Normal balance checking for subsequent runs
