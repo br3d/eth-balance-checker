@@ -50,7 +50,7 @@ class HealthCheckServer:
         """Start the health check server in a separate thread."""
         try:
             logger.info(f"Starting healthcheck server on port {self.port}")
-            self.app.run(host='127.0.0.1', port=self.port, debug=False, use_reloader=False, threaded=True)
+            self.app.run(host='0.0.0.0', port=self.port, debug=False, use_reloader=False, threaded=True)
         except Exception as e:
             logger.error(f"Failed to start healthcheck server: {str(e)}")
 

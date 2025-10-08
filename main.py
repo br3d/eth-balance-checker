@@ -232,8 +232,13 @@ def main_check():
                         
                         if current_balance != previous_balance:
                             logger.info(f"{coin} balance changed from {previous_balance} to {current_balance}")
+                            # Format wallet address for display (show first 6 and last 4 characters)
+                            wallet_display = f"{ethereum_address[:6]}...{ethereum_address[-4:]}"
                             send_notification(
-                                f"💰 {coin} Balance changed! New balance: {current_balance}"
+                                f"💰 {coin.upper()} Balance Changed!\n"
+                                f"Wallet: {wallet_display}\n"
+                                f"Previous: {previous_balance}\n"
+                                f"Current: {current_balance}"
                             )
                         else:
                             logger.info(f"{coin} balance unchanged: {current_balance}")

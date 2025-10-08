@@ -4018,7 +4018,8 @@ TELEGRAM_CHAT_ID=YOUR_TELEGRAM_CHAT_ID
   ```
   
 </details>
-source [here](https://github.com/ethereum-lists/tokens/tree/master/tokens/eth)
+
+Source: [Ethereum Token List](https://github.com/ethereum-lists/tokens/tree/master/tokens/eth)
 
 #### Configuration Options
 
