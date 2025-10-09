@@ -17,6 +17,9 @@ A Python-based monitoring bot that tracks Ethereum token balances and sends noti
 ![Balance Monitoring](./docs/images/screen_1.png)
 *Real-time balance monitoring with Telegram notifications*
 
+### Grafana dashboard
+![Grafana Dashboard](./docs/images/screen_2.png)
+
 
 ## 📋 Prerequisites
 
@@ -4138,6 +4141,22 @@ docker logs eth-balance-checker
 # Check health
 curl http://localhost:8000/
 ```
+
+### Run from GHCR with explicit host binding
+
+If you want to expose the metrics endpoint on a specific host IP (for example, to make it available to Prometheus) and run the image published to GitHub Container Registry, use:
+
+```bash
+docker run -d \
+  --name eth-balance-checker \
+  -e INFURA_URL="https://mainnet.infura.io/v3/***" \
+  -e TELEGRAM_CHAT_ID="-100***" \
+  -e TELEGRAM_BOT_TOKEN="****:****" \
+  -p 192.168.68.44:8000:8000 \
+  ghcr.io/br3d/eth-balance-checker:latest
+```
+
+Replace the IP `192.168.68.44` with your host's IP address and the starred values with your actual credentials.
 
 ## 🧪 Testing
 
